@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Weather Station</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #151b2e;
+            --bg-card: #1a2137;
+            --accent-warm: #ff6b35;
+            --accent-cool: #4ecdc4;
+            --accent-purple: #a855f7;
+            --accent-blue: #3b82f6;
+            --text-primary: #e8edf4;
+            --text-secondary: #8b95a8;
+            --glow: rgba(78, 205, 196, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(78, 205, 196, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 107, 53, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
+            animation: backgroundPulse 8s ease-in-out infinite alternate;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes backgroundPulse {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.6; }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-cool), var(--accent-warm));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: -2px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent-cool);
+            box-shadow: 0 0 20px var(--glow);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-indicator.offline {
+            background: #ef4444;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        .status-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInUp 0.8s ease-out backwards;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+        .card:nth-child(4) { animation-delay: 0.4s; }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(78, 205, 196, 0.05), rgba(255, 107, 53, 0.05));
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(78, 205, 196, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            border-radius: 12px;
+            background: rgba(78, 205, 196, 0.1);
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 300;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .value {
+            font-family: 'Playfair Display', serif;
+            font-size: 4.5rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .temperature .value {
+            background: linear-gradient(135deg, #ff6b35, #ff8c42);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .humidity .value {
+            background: linear-gradient(135deg, #4ecdc4, #44a8e0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .unit {
+            font-size: 2rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+            margin-left: 5px;
+        }
+
+        .timestamp {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 15px;
+            font-weight: 300;
+        }
+
+        .stats-grid {
+            display: grid;
+            gap: 15px;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .stat-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+
+        .stat-icon {
+            font-size: 1.2rem;
+        }
+
+        .chart-container {
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            animation: fadeInUp 0.8s ease-out 0.5s backwards;
+            margin-bottom: 30px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .chart-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            background: rgba(78, 205, 196, 0.2);
+            border-color: var(--accent-cool);
+        }
+
+        .btn.active {
+            background: var(--accent-cool);
+            border-color: var(--accent-cool);
+            color: var(--bg-primary);
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .value {
+                font-size: 3.5rem;
+            }
+
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Weather Station</h1>
+            <p class="subtitle">Firebase Real-Time Monitoring</p>
+            <div class="status-bar">
+                <div class="status-indicator" id="statusIndicator"></div>
+                <span class="status-text" id="statusText">Connecting to Firebase...</span>
+            </div>
+        </header>
+
+        <div class="dashboard">
+            <!-- Current Temperature -->
+            <div class="card temperature">
+                <div class="card-header">
+                    <div class="icon">🌡️</div>
+                    <h2 class="card-title">Temperature</h2>
+                </div>
+                <div>
+                    <span class="value" id="temp-value">--</span>
+                    <span class="unit">°C</span>
+                </div>
+                <div class="timestamp" id="temp-time">Waiting for data...</div>
+            </div>
+
+            <!-- Current Humidity -->
+            <div class="card humidity">
+                <div class="card-header">
+                    <div class="icon">💧</div>
+                    <h2 class="card-title">Humidity</h2>
+                </div>
+                <div>
+                    <span class="value" id="humidity-value">--</span>
+                    <span class="unit">%</span>
+                </div>
+                <div class="timestamp" id="humidity-time">Waiting for data...</div>
+            </div>
+
+            <!-- Today's Statistics -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="icon">📊</div>
+                    <h2 class="card-title">Today's Stats</h2>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">
+                            <span class="stat-icon">🔥</span> Max Temp
+                        </span>
+                        <span class="stat-value" id="today-max-temp">--°C</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">
+                            <span class="stat-icon">❄️</span> Min Temp
+                        </span>
+                        <span class="stat-value" id="today-min-temp">--°C</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">
+                            <span class="stat-icon">💦</span> Max Humidity
+                        </span>
+                        <span class="stat-value" id="today-max-humid">--%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">
+                            <span class="stat-icon">🌵</span> Min Humidity
+                        </span>
+                        <span class="stat-value" id="today-min-humid">--%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Summary -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="icon">📅</div>
+                    <h2 class="card-title">This Week</h2>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">
+                            <span class="stat-icon">🌡️</span> Avg Temp
+                        </span>
+                        <span class="stat-value" id="week-avg-temp">--°C</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">
+                            <span class="stat-icon">💧</span> Avg Humidity
+                        </span>
+                        <span class="stat-value" id="week-avg-humid">--%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">
+                            <span class="stat-icon">📈</span> Peak Temp
+                        </span>
+                        <span class="stat-value" id="week-peak-temp">--°C</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">
+                            <span class="stat-icon">📉</span> Lowest Temp
+                        </span>
+                        <span class="stat-value" id="week-low-temp">--°C</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Chart -->
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">Weekly Overview</h3>
+                <div class="chart-controls">
+                    <button class="btn active" onclick="changeChartView('week')">Week</button>
+                    <button class="btn" onclick="changeChartView('today')">Today</button>
+                </div>
+            </div>
+            <canvas id="weeklyChart"></canvas>
+        </div>
+
+        <!-- Daily Chart -->
+        <div class="chart-container">
+            <h3 class="chart-title">Today's Temperature & Humidity</h3>
+            <canvas id="todayChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, onValue, query, orderByChild, limitToLast } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        // Your Firebase configuration
+                // Your Firebase configuration
+                    // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3yHD71PNoV7HiuM9GOOnYQjx-QSxRM9w",
+            authDomain: "iotboranno.firebaseapp.com",
+            databaseURL: "https://iotboranno-default-rtdb.firebaseio.com",
+            projectId: "iotboranno",
+            storageBucket: "iotboranno.firebasestorage.app",
+            messagingSenderId: "855530580338",
+            appId: "1:855530580338:web:5d281004d30ad171be95eb",
+            measurementId: "G-YX1FZ58ZM8"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Make database available globally
+        window.firebaseDB = database;
+        window.firebaseRef = ref;
+        window.firebaseOnValue = onValue;
+        window.firebaseQuery = query;
+        window.firebaseOrderByChild = orderByChild;
+        window.firebaseLimitToLast = limitToLast;
+
+        console.log('Firebase initialized');
+        
+        // Start listening to data
+        window.initializeWeatherData();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script>
+        // Chart instances
+        let weeklyChart, todayChart;
+        let currentChartView = 'week';
+
+        // Initialize charts
+        function initCharts() {
+            // Weekly Chart
+            const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+            weeklyChart = new Chart(weeklyCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Max Temperature (°C)',
+                        data: [],
+                        backgroundColor: 'rgba(255, 107, 53, 0.6)',
+                        borderColor: '#ff6b35',
+                        borderWidth: 2,
+                        yAxisID: 'y',
+                    }, {
+                        label: 'Min Temperature (°C)',
+                        data: [],
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: '#3b82f6',
+                        borderWidth: 2,
+                        yAxisID: 'y',
+                    }, {
+                        label: 'Avg Humidity (%)',
+                        data: [],
+                        type: 'line',
+                        backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                        borderColor: '#4ecdc4',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        yAxisID: 'y1',
+                    }]
+                },
+                options: getChartOptions('Weekly Statistics', true)
+            });
+
+            // Today Chart
+            const todayCtx = document.getElementById('todayChart').getContext('2d');
+            todayChart = new Chart(todayCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Temperature (°C)',
+                        data: [],
+                        borderColor: '#ff6b35',
+                        backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'y',
+                    }, {
+                        label: 'Humidity (%)',
+                        data: [],
+                        borderColor: '#4ecdc4',
+                        backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'y1',
+                    }]
+                },
+                options: getChartOptions('Hourly Data', true)
+            });
+        }
+
+        function getChartOptions(title, dualAxis = false) {
+            const baseOptions = {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2.5,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#e8edf4',
+                            font: { family: 'Outfit', size: 14 },
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(21, 27, 46, 0.95)',
+                        titleColor: '#e8edf4',
+                        bodyColor: '#e8edf4',
+                        borderColor: 'rgba(78, 205, 196, 0.3)',
+                        borderWidth: 1,
+                        padding: 12,
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: {
+                            color: '#8b95a8',
+                            font: { family: 'Outfit' }
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: {
+                            color: '#ff6b35',
+                            font: { family: 'Outfit' }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Temperature (°C)',
+                            color: '#ff6b35',
+                            font: { family: 'Outfit', size: 13 }
+                        }
+                    }
+                }
+            };
+
+            if (dualAxis) {
+                baseOptions.scales.y1 = {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    grid: { drawOnChartArea: false },
+                    ticks: {
+                        color: '#4ecdc4',
+                        font: { family: 'Outfit' }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Humidity (%)',
+                        color: '#4ecdc4',
+                        font: { family: 'Outfit', size: 13 }
+                    }
+                };
+            }
+
+            return baseOptions;
+        }
+
+        // Initialize Firebase listeners
+        function initializeWeatherData() {
+            const db = window.firebaseDB;
+            const ref = window.firebaseRef;
+            const onValue = window.firebaseOnValue;
+
+            // Listen to current weather data
+            const currentRef = ref(db, 'weather/current');
+            onValue(currentRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    updateCurrentDisplay(data);
+                    updateStatus(true);
+                }
+            });
+
+            // Listen to today's stats
+            const today = new Date().toISOString().split('T')[0];
+            const todayStatsRef = ref(db, `weather/daily_stats/${today}`);
+            onValue(todayStatsRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    updateTodayStats(data);
+                }
+            });
+
+            // Load weekly data
+            loadWeeklyData();
+
+            // Load today's detailed data
+            loadTodayData();
+        }
+
+        function updateCurrentDisplay(data) {
+            document.getElementById('temp-value').textContent = data.temperature.toFixed(1);
+            document.getElementById('humidity-value').textContent = data.humidity.toFixed(1);
+            
+            const updateTime = data.time || 'Unknown';
+            document.getElementById('temp-time').textContent = `Updated at ${updateTime}`;
+            document.getElementById('humidity-time').textContent = `Updated at ${updateTime}`;
+        }
+
+        function updateTodayStats(data) {
+            document.getElementById('today-max-temp').textContent = data.max_temp ? data.max_temp.toFixed(1) + '°C' : '--°C';
+            document.getElementById('today-min-temp').textContent = data.min_temp ? data.min_temp.toFixed(1) + '°C' : '--°C';
+            document.getElementById('today-max-humid').textContent = data.max_humidity ? data.max_humidity.toFixed(1) + '%' : '--%';
+            document.getElementById('today-min-humid').textContent = data.min_humidity ? data.min_humidity.toFixed(1) + '%' : '--%';
+        }
+
+        function loadWeeklyData() {
+            const db = window.firebaseDB;
+            const ref = window.firebaseRef;
+            const onValue = window.firebaseOnValue;
+
+            // Get last 7 days
+            const dates = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                dates.push(date.toISOString().split('T')[0]);
+            }
+
+            const statsRef = ref(db, 'weather/daily_stats');
+            onValue(statsRef, (snapshot) => {
+                const allStats = snapshot.val();
+                if (!allStats) return;
+
+                const weekData = {
+                    labels: [],
+                    maxTemps: [],
+                    minTemps: [],
+                    avgHumidity: []
+                };
+
+                let weekTempSum = 0, weekHumidSum = 0, weekCount = 0;
+                let weekPeak = -Infinity, weekLow = Infinity;
+
+                dates.forEach(date => {
+                    if (allStats[date]) {
+                        const dayStats = allStats[date];
+                        const label = new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                        
+                        weekData.labels.push(label);
+                        weekData.maxTemps.push(dayStats.max_temp);
+                        weekData.minTemps.push(dayStats.min_temp);
+                        
+                        // Calculate average humidity for the day
+                        const avgHumid = (dayStats.max_humidity + dayStats.min_humidity) / 2;
+                        weekData.avgHumidity.push(avgHumid);
+
+                        // Weekly aggregates
+                        weekTempSum += (dayStats.max_temp + dayStats.min_temp) / 2;
+                        weekHumidSum += avgHumid;
+                        weekCount++;
+                        weekPeak = Math.max(weekPeak, dayStats.max_temp);
+                        weekLow = Math.min(weekLow, dayStats.min_temp);
+                    }
+                });
+
+                // Update weekly summary
+                if (weekCount > 0) {
+                    document.getElementById('week-avg-temp').textContent = (weekTempSum / weekCount).toFixed(1) + '°C';
+                    document.getElementById('week-avg-humid').textContent = (weekHumidSum / weekCount).toFixed(1) + '%';
+                    document.getElementById('week-peak-temp').textContent = weekPeak.toFixed(1) + '°C';
+                    document.getElementById('week-low-temp').textContent = weekLow.toFixed(1) + '°C';
+                }
+
+                // Update chart
+                weeklyChart.data.labels = weekData.labels;
+                weeklyChart.data.datasets[0].data = weekData.maxTemps;
+                weeklyChart.data.datasets[1].data = weekData.minTemps;
+                weeklyChart.data.datasets[2].data = weekData.avgHumidity;
+                weeklyChart.update();
+            });
+        }
+
+        function loadTodayData() {
+            const db = window.firebaseDB;
+            const ref = window.firebaseRef;
+            const onValue = window.firebaseOnValue;
+
+            const today = new Date().toISOString().split('T')[0];
+            const todayHistoryRef = ref(db, `weather/history/${today}`);
+            
+            onValue(todayHistoryRef, (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return;
+
+                const readings = Object.values(data);
+                readings.sort((a, b) => a.timestamp - b.timestamp);
+
+                const labels = readings.map(r => r.time);
+                const temps = readings.map(r => r.temperature);
+                const humidity = readings.map(r => r.humidity);
+
+                todayChart.data.labels = labels;
+                todayChart.data.datasets[0].data = temps;
+                todayChart.data.datasets[1].data = humidity;
+                todayChart.update();
+            });
+        }
+
+        function updateStatus(connected) {
+            const indicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            
+            if (connected) {
+                indicator.classList.remove('offline');
+                statusText.textContent = 'Connected';
+            } else {
+                indicator.classList.add('offline');
+                statusText.textContent = 'Disconnected';
+            }
+        }
+
+        function changeChartView(view) {
+            currentChartView = view;
+            const buttons = document.querySelectorAll('.chart-controls .btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (view === 'today') {
+                loadTodayData();
+            } else {
+                loadWeeklyData();
+            }
+        }
+
+        // Initialize when DOM is ready
+        window.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            console.log('Charts initialized');
+        });
+
+        // Make functions globally available
+        window.changeChartView = changeChartView;
+        window.initializeWeatherData = initializeWeatherData;
+    </script>
+</body>
+</html>

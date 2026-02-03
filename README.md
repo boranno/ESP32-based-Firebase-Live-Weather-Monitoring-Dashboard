@@ -1,8 +1,7 @@
 ﻿# ESP32 based Firebase Live Weather Monitoring Dashboard
 
-![ESP32 Live Weather logo](./logo.svg)
+![ESP32 Live Weather logo](./logo.jpg)
 
-[Live demo](https://boranno.github.io/ESP32-based-Firebase-Live-Weather-Monitoring-Dashboard/) ✅
 
 Live Weather Monitoring — ESP32 + Firebase
 

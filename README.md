@@ -5,7 +5,7 @@
 
 Live Weather Monitoring — ESP32 + Firebase
 
-A compact ESP32-based system that streams temperature, humidity sensor data to Firebase Realtime Database and provides a lightweight, real-time dashboard (`firebase_weather_dashboard.html`).
+A compact ESP32-based system that streams temperature, humidity sensor data to Firebase Realtime Database and provides a lightweight, real-time dashboard (`index.html`).
 
 ---
 
@@ -46,7 +46,7 @@ Hardware
 Software/Libraries
 - Arduino IDE or PlatformIO
 - `WiFi.h`, `Firebase-ESP-Client` (or `FirebaseArduino`)
-- `ArduinoJson` and appropriate sensor libraries (`DHT`, `Adafruit_BME280`)
+- `ArduinoJson` and appropriate sensor libraries (`DHT`)
 
 ---
 

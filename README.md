@@ -1,45 +1,62 @@
-# ESP32 based Firebase Live Weather Monitoring Dashboard
+﻿# ESP32 based Firebase Live Weather Monitoring Dashboard
+
+![ESP32 Live Weather logo](./logo.svg)
+
+[Live demo](https://boranno.github.io/ESP32-based-Firebase-Live-Weather-Monitoring-Dashboard/) ✅
 
 Live Weather Monitoring — ESP32 + Firebase
 
-A simple ESP32-based weather monitoring system that uploads sensor readings to Firebase Realtime Database and provides a lightweight live dashboard (`firebase_weather_dashboard.html`).
+A compact ESP32-based system that streams temperature, humidity sensor data to Firebase Realtime Database and provides a lightweight, real-time dashboard (`firebase_weather_dashboard.html`).
 
 ---
 
-## 🔧 Recommended repository name
+## 🔧 Repository
 
-**esp32-firebase-live-weather-monitoring-dashboard** (lowercase, hyphenated) — clear and friendly for GitHub.
+**Name:** ESP32-based-Firebase-Live-Weather-Monitoring-Dashboard
 
-## ✨ Short description
+**Clone:**
 
-ESP32 firmware and a web dashboard to collect and visualize local weather data (temperature, humidity, pressure, etc.) using Firebase as the backend.
+```bash
+git clone https://github.com/boranno/ESP32-based-Firebase-Live-Weather-Monitoring-Dashboard.git
+```
 
-## ✅ Features
+**Deployed (GitHub Pages):**
 
-- Publishes sensor data from an ESP32 to Firebase.
-- Simple HTML dashboard for real-time viewing (`firebase_weather_dashboard.html`).
-- Easy to configure for different sensors (DHT series, BME280, etc.).
+https://boranno.github.io/ESP32-based-Firebase-Live-Weather-Monitoring-Dashboard/
 
-## 🛠️ Hardware
+---
 
+## ✨ Overview
+
+This project contains an Arduino sketch for an ESP32 that publishes sensor readings to Firebase Realtime Database and a small HTML dashboard for live monitoring. It's intended as a simple, extensible starting point for DIY IoT weather monitoring.
+
+## ✅ Key features
+
+- Real-time temperature, humidity publishing
+- Lightweight dashboard for live visualization (works with GitHub Pages)
+- Simple configuration for DHT sensors and ESP32 S3 boards
+- Example Firebase security rules and data format
+
+## 🛠️ Requirements
+
+Hardware
 - ESP32 development board
-- One or more sensors (examples: DHT22, BME280)
+- DHT22/DHT11
 - Micro-USB cable
 
-## 💾 Software & libraries
-
+Software/Libraries
 - Arduino IDE or PlatformIO
-- Common libraries: `WiFi.h`, `Firebase-ESP-Client` (or `FirebaseArduino`), `ArduinoJson`, sensor libraries (`DHT`, `Adafruit_BME280`) depending on hardware
+- `WiFi.h`, `Firebase-ESP-Client` (or `FirebaseArduino`)
+- `ArduinoJson` and appropriate sensor libraries (`DHT`, `Adafruit_BME280`)
+
+---
 
 ## 🚀 Quick start
 
-1. Clone the repo:
-
-   git clone https://github.com/<boranno>/esp32-firebase-live-weather-monitoring-dashboard.git
-
-2. Open `esp32_firebase_weather.ino` in the Arduino IDE (or import into PlatformIO).
-3. Install required libraries listed above.
-4. Edit the top of the `.ino` file and set your credentials:
+1. Clone the repository (see above).
+2. Open `esp32_firebase_weather.ino` in the Arduino IDE or import into PlatformIO.
+3. Install the required libraries.
+4. Configure Wi‑Fi and Firebase credentials at the top of the sketch:
 
 ```cpp
 const char* WIFI_SSID = "YOUR_SSID";
@@ -48,15 +65,15 @@ const char* FIREBASE_HOST = "your-project.firebaseio.com"; // or databaseURL
 const char* FIREBASE_AUTH = "YOUR_FIREBASE_SECRET_OR_API_KEY";
 ```
 
-5. Set your sensor type and pin in the sketch (check commented configuration in the `.ino`).
-6. Upload to ESP32 and confirm logs show Firebase connection and successful writes.
-7. Open `firebase_weather_dashboard.html` in a browser (or host it on GitHub Pages) to view real-time data.
+5. Set your sensor type and pins, then upload to the ESP32.
+6. Confirm successful Firebase writes via the serial monitor.
+7. View the dashboard locally (`index.html`) or visit the live demo URL after your device starts publishing.
 
-> Tip: If you get CORS or local file issues with the HTML dashboard, serve it with a simple static server (e.g., `npx http-server` or GitHub Pages).
+> Tip: If the dashboard doesn't load directly from a file due to browser security, serve it with a static server (e.g., `npx http-server`) or use GitHub Pages.
 
-## 🔐 Firebase rules (example)
+---
 
-Make sure to secure your Firebase DB. A temporary open rule for testing only (not for production):
+## 🔐 Example Firebase rules (for testing only)
 
 ```json
 {
@@ -67,15 +84,20 @@ Make sure to secure your Firebase DB. A temporary open rule for testing only (no
 }
 ```
 
-Adapt rules to authenticate and limit access for production.
+Remember to secure your database for production use.
 
-## 📁 Data format (example)
+## 📁 Example data structure
 
-```
+```json
 /weather/{deviceId}:
-  - temperature: 21.5
-  - humidity: 48
-  - pressure: 1013
-  - timestamp: 1620000000
+  temperature: 21.5
+  humidity: 48
+  timestamp: 1620000000
 ```
+
+---
+
+## 🤝 Contributing
+
+Contributions and feedback are welcome — open an issue or submit a pull request with a short description and test steps.
 
